@@ -1,9 +1,15 @@
 #include <iostream>
 
 int main() {
-    double ferryMass = 15000.0; // kg
-    double currentSpeed = 12.5; // m/s
+    double ferryMass; // kg
+    double currentSpeed; // m/s
     double dragCoefficient = 0.04;
+
+    std::cout << "Enter ferry mass (kg):" << std::endl;
+    std::cin >> ferryMass;
+
+    std::cout << "Enter start speed (m/s):" << std::endl;
+    std::cin >> currentSpeed;
 
     // Physics simulation variables
     double distanceTraveled = 0.0; // meters
