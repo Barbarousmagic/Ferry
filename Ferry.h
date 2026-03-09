@@ -9,13 +9,15 @@
 class Ferry {
 private:
     double mass;
-    double speed;
+    double speedX;
+    double speedY;
     double dragCoefficient;
 public:
-    Ferry(double m, double s, double drag);
-    double calcBreakingDist(double currentWater);
+    Ferry(double m, double sx, double sy, double drag);
+    double calcBreakingDist(double waterX, double waterY);
     double getMass();
-    double getSpeed();
+    double getSpeedX();
+    double getSpeedY();
 };
 
 

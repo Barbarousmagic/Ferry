@@ -3,36 +3,46 @@
 //
 
 #include "Ferry.h"
+#include <cmath>
 
-Ferry::Ferry(double m, double s, double drag) {
+Ferry::Ferry(double m, double sx, double sy, double drag) {
     mass = m;
-    speed = s;
+    speedX = sx;
+    speedY = sy;
     dragCoefficient = drag;
 }
 
-double Ferry::calcBreakingDist(double currentWater) {
-    double distanceTraveled = 0.0;
+double Ferry::getMass() { return mass; }
+double Ferry::getSpeedX() { return speedX; }
+double Ferry::getSpeedY() { return speedY; }
+
+double Ferry::calcBreakingDist(double waterX, double waterY) {
+    double posX = 0.0;
+    double posY = 0.0;
     double dt = 1.0;
-    double relativeSpeed = speed - currentWater;
-    while (relativeSpeed > 0.1) {
+    double relX = speedX - waterX;
+    double relY = speedY - waterY;
+
+    double relMagnitude = std::sqrt(relX * relX + relY * relY);
+    while (relMagnitude > 0.1) {
         // 1. Distance traveled in this time step S = V * t
-        distanceTraveled += speed * dt;
+        posX += speedX * dt;
+        posY += speedY * dt;
         // 2. Water drag force F = k * V^2
-        double dragForce = dragCoefficient * (relativeSpeed * relativeSpeed);
+        double dragX = dragCoefficient * (relX * relMagnitude);
+        double dragY = dragCoefficient * (relY * relMagnitude);
         // 3. Deceleration a = F / m
-        double deceleration = dragForce / mass;
+        double decX = dragX / mass;
+        double decY = dragY / mass;
         // 4. Speed update
-        speed -= deceleration * dt;
+        speedX -= decX * dt;
+        speedY -= decY * dt;
         // 5. Relative Speed for next loop step
-        relativeSpeed = speed - currentWater;
+        relX = speedX - waterX;
+        relY = speedY - waterY;
+        relMagnitude = std::sqrt(relX * relX + relY * relY);
     }
-    return distanceTraveled;
+    return std::sqrt(posX * posX + posY * posY);
 }
 
-double Ferry::getMass() {
-    return mass;
-}
 
-double Ferry::getSpeed() {
-    return speed;
-}
