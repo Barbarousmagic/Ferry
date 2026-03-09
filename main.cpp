@@ -26,6 +26,13 @@ int main() {
     std::cout << "Enter ferry mass (kg): ";
     std::cin >> ferryMass;
 
+    while (std::cin.fail()) {
+        std::cin.clear();
+        std::cin.ignore(10000, '\n');
+        std::cout << "Invalid input! Please enter a number for mass (kg): ";
+        std::cin >> ferryMass;
+    }
+
     std::cout << "Enter start speed (m/s): ";
     std::cin >> currentSpeed;
 
