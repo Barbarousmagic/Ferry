@@ -28,3 +28,11 @@ double Ferry::calcBreakingDist(double currentWater) {
     }
     return distanceTraveled;
 }
+
+double Ferry::getMass() {
+    return mass;
+}
+
+double Ferry::getSpeed() {
+    return speed;
+}

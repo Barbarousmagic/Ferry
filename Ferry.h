@@ -14,6 +14,8 @@ private:
 public:
     Ferry(double m, double s, double drag);
     double calcBreakingDist(double currentWater);
+    double getMass();
+    double getSpeed();
 };
 
 

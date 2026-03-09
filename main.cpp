@@ -28,6 +28,6 @@ int main() {
     Ferry myFerry(ferryMass, currentSpeed, 500.0);
     double resultDistance = myFerry.calcBreakingDist(currentWater);
     std::cout << "\nSuccessfully stopped. Braking distance:" << resultDistance << std::endl;
-
+    std::cout << "Ferry mass is: " << myFerry.getMass() << " kg" << std::endl;
     return 0;
 }
