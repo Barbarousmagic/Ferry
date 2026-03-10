@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Ferry.h"
+#include "Controller.h"
 
 
 
@@ -32,8 +33,12 @@ int main() {
     std::cin >> waterY;
 
     Ferry myFerry(ferryMass, speedX, speedY, 500.0);
-    double resultDistance = myFerry.calcBreakingDist(waterX, waterY);
-    std::cout << "\nSuccessfully stopped. Braking distance:" << resultDistance << std::endl;
-    std::cout << "Ferry mass is: " << myFerry.getMass() << " kg" << std::endl;
+    Controller myAi(myFerry, 2000.0);
+    bool willCrash = myAi.checkCollision(waterX, waterY);
+    if (willCrash) { std::cout << "WARNING: COLLISION IMMINENT!" << std::endl;}
+    else {std::cout << "SAFE: We will stop in time" << std::endl;}
+    //double resultDistance = myFerry.calcBreakingDist(waterX, waterY);
+    //std::cout << "\nSuccessfully stopped. Braking distance:" << resultDistance << std::endl;
+    //std::cout << "Ferry mass is: " << myFerry.getMass() << " kg" << std::endl;
     return 0;
 }
