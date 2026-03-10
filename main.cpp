@@ -37,6 +37,7 @@ int main() {
     bool willCrash = myAi.checkCollision(waterX, waterY);
     if (willCrash) { std::cout << "WARNING: COLLISION IMMINENT!" << std::endl;}
     else {std::cout << "SAFE: We will stop in time" << std::endl;}
+    myFerry.exportTelemetry(waterX, waterY);
     //double resultDistance = myFerry.calcBreakingDist(waterX, waterY);
     //std::cout << "\nSuccessfully stopped. Braking distance:" << resultDistance << std::endl;
     //std::cout << "Ferry mass is: " << myFerry.getMass() << " kg" << std::endl;

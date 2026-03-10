@@ -14,7 +14,8 @@ private:
     double dragCoefficient;
 public:
     Ferry(double m, double sx, double sy, double drag);
-    double calcBreakingDist(double waterX, double waterY);
+    double calcBreakingDist(double waterX, double waterY) const;
+    void exportTelemetry(double waterX, double waterY);
     double getMass();
     double getSpeedX();
     double getSpeedY();
