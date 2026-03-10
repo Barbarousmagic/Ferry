@@ -9,16 +9,20 @@
 class Ferry {
 private:
     double mass;
+    double posX;
+    double posY;
     double speedX;
     double speedY;
     double dragCoefficient;
 public:
-    Ferry(double m, double sx, double sy, double drag);
+    Ferry(double m, double x, double y, double sx, double sy, double drag);
     double calcBreakingDist(double waterX, double waterY) const;
     void exportTelemetry(double waterX, double waterY);
     double getMass();
-    double getSpeedX();
-    double getSpeedY();
+    double getSpeedX() const;
+    double getSpeedY() const;
+    double getPosX() const;
+    double getPosY() const;
 };
 
 

@@ -7,16 +7,21 @@
 #include <fstream>
 #include <iostream>
 
-Ferry::Ferry(double m, double sx, double sy, double drag) {
+Ferry::Ferry(double m, double x, double y, double sx, double sy, double drag) {
     mass = m;
+    posX = x;
+    posY = y;
     speedX = sx;
     speedY = sy;
     dragCoefficient = drag;
 }
 
 double Ferry::getMass() { return mass; }
-double Ferry::getSpeedX() { return speedX; }
-double Ferry::getSpeedY() { return speedY; }
+
+double Ferry::getPosX() const {return posX;}
+double Ferry::getPosY() const {return posY;}
+double Ferry::getSpeedX() const { return speedX; }
+double Ferry::getSpeedY() const { return speedY; }
 
 double Ferry::calcBreakingDist(double waterX, double waterY) const {
     double posX = 0.0;
