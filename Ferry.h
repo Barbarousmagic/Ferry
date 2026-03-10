@@ -4,25 +4,26 @@
 
 #ifndef FERRY_FERRY_H
 #define FERRY_FERRY_H
-
+struct Position {
+    double x;
+    double y;
+};
 
 class Ferry {
 private:
     double mass;
-    double posX;
-    double posY;
+    Position currentPos;
     double speedX;
     double speedY;
     double dragCoefficient;
 public:
-    Ferry(double m, double x, double y, double sx, double sy, double drag);
-    double calcBreakingDist(double waterX, double waterY) const;
+    Ferry(double m, Position startPos, double sx, double sy, double drag);
+    Position calcBreakingDist(double waterX, double waterY) const;
     void exportTelemetry(double waterX, double waterY);
     double getMass();
     double getSpeedX() const;
     double getSpeedY() const;
-    double getPosX() const;
-    double getPosY() const;
+    Position getPos() const;
 };
 
 

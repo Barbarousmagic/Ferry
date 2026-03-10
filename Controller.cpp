@@ -4,12 +4,11 @@
 
 #include "Controller.h"
 #include <cmath>
-Controller::Controller(Ferry f, double tX, double tY) : myFerry(f), targetX(tX), targetY(tY) {
+Controller::Controller(Ferry f, Position t) : myFerry(f), target(t) {
 
 }
-bool Controller::checkCollision(double waterX, double waterY) {
-    double currentX = myFerry.getPosX();
-    double currentY = myFerry.getPosY();
-    double waypointDist = std::sqrt(std::pow(targetX - currentX, 2) + std::pow(targetY - currentY, 2));
-    return myFerry.calcBreakingDist(waterX, waterY) >= waypointDist;
+bool Controller::isDockingSuccessful(double waterX, double waterY) {
+    Position finalPos = myFerry.calcBreakingDist(waterX, waterY);
+    double missDistance = std::sqrt(std::pow(target.x - finalPos.x, 2) + std::pow(target.y - finalPos.y, 2));
+    return missDistance <= 50.0;
 }

@@ -9,11 +9,10 @@
 class Controller {
 private:
     Ferry myFerry;
-    double targetX;
-    double targetY;
+    Position target;
 public:
-    Controller(Ferry f, double tX, double tY);
-    bool checkCollision(double waterX, double waterY);
+    Controller(Ferry f, Position t);
+    bool isDockingSuccessful(double waterX, double waterY);
 };
 
 

@@ -7,25 +7,22 @@
 #include <fstream>
 #include <iostream>
 
-Ferry::Ferry(double m, double x, double y, double sx, double sy, double drag) {
+Ferry::Ferry(double m, Position startPos, double sx, double sy, double drag) {
     mass = m;
-    posX = x;
-    posY = y;
+    currentPos = startPos;
     speedX = sx;
     speedY = sy;
     dragCoefficient = drag;
 }
 
 double Ferry::getMass() { return mass; }
-
-double Ferry::getPosX() const {return posX;}
-double Ferry::getPosY() const {return posY;}
+Position Ferry::getPos() const { return currentPos; }
 double Ferry::getSpeedX() const { return speedX; }
 double Ferry::getSpeedY() const { return speedY; }
 
-double Ferry::calcBreakingDist(double waterX, double waterY) const {
-    double posX = 0.0;
-    double posY = 0.0;
+Position Ferry::calcBreakingDist(double waterX, double waterY) const {
+    double posX = currentPos.x;
+    double posY = currentPos.y;
     double dt = 1.0;
     double simSpeedX = speedX;
     double simSpeedY = speedY;
@@ -51,7 +48,10 @@ double Ferry::calcBreakingDist(double waterX, double waterY) const {
         relY = simSpeedY - waterY;
         relMagnitude = std::sqrt(relX * relX + relY * relY);
     }
-    return std::sqrt(posX * posX + posY * posY);
+    Position stopPos;
+    stopPos.x = posX;
+    stopPos.y = posY;
+    return stopPos;
 }
 
 void Ferry::exportTelemetry(double waterX, double waterY) {
@@ -62,8 +62,8 @@ void Ferry::exportTelemetry(double waterX, double waterY) {
     }
     file << "Time,PosX,PosY,SpeedX,SpeedY\n";
 
-    double posX = 0.0;
-    double posY = 0.0;
+    double posX = currentPos.x;
+    double posY = currentPos.y;
     double currentTime = 0.0;
     double dt = 1.0;
     double simSpeedX = speedX;

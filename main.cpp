@@ -32,14 +32,16 @@ int main() {
     std::cout << "Enter water Y-speed (m/s): ";
     std::cin >> waterY;
 
-    Ferry myFerry(ferryMass,0.0, 0.0, speedX, speedY, 500.0);
-    Controller myAi(myFerry, 1500.0, 1500.0);
-    bool willCrash = myAi.checkCollision(waterX, waterY);
-    if (willCrash) { std::cout << "WARNING: COLLISION IMMINENT!" << std::endl;}
-    else {std::cout << "SAFE: We will stop in time" << std::endl;}
+    Position start = {0.0, 0.0};
+    Ferry myFerry(ferryMass, start, speedX, speedY, 500.0);
+    Position port = {1500.0, 1500.0};
+    Controller myAi(myFerry, port);
+    bool willDock = myAi.isDockingSuccessful(waterX, waterY);
+    if (willDock) { std::cout << "SUCCESS: The ferry will dock safely!" << std::endl;}
+    else {std::cout << "WARNING: We will miss the port!" << std::endl;}
     myFerry.exportTelemetry(waterX, waterY);
-    double resultDistance = myFerry.calcBreakingDist(waterX, waterY);
-    std::cout << "\nSuccessfully stopped. Braking distance:" << resultDistance << std::endl;
+    // double resultDistance = myFerry.calcBreakingDist(waterX, waterY);
+    // std::cout << "\nSuccessfully stopped. Braking distance:" << resultDistance << std::endl;
     //std::cout << "Ferry mass is: " << myFerry.getMass() << " kg" << std::endl;
     return 0;
 }
