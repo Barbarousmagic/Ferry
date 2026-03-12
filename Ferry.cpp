@@ -7,11 +7,14 @@
 #include <fstream>
 #include <iostream>
 
-Ferry::Ferry(double m, Position startPos, double sx, double sy, double drag) {
+Ferry::Ferry(double m, Position startPos, double sx, double sy, double dt, double drag) {
     mass = m;
     currentPos = startPos;
     speedX = sx;
     speedY = sy;
+    currentThrustX = 0.0;
+    currentThrustY = 0.0;
+    deltaT = dt;
     dragCoefficient = drag;
 }
 
@@ -20,33 +23,37 @@ Position Ferry::getPos() const { return currentPos; }
 double Ferry::getSpeedX() const { return speedX; }
 double Ferry::getSpeedY() const { return speedY; }
 
-Position Ferry::calcBreakingDist(double waterX, double waterY) const {
+Position Ferry::calcDist(double waterX, double waterY) const {
     double posX = currentPos.x;
     double posY = currentPos.y;
-    double dt = 1.0;
     double simSpeedX = speedX;
     double simSpeedY = speedY;
     double relX = simSpeedX - waterX;
     double relY = simSpeedY - waterY;
-
+    double simTime = 0.0;
     double relMagnitude = std::sqrt(relX * relX + relY * relY);
-    while (relMagnitude > 0.1) {
+    while (relMagnitude > 0.1 && simTime < 1000.0) {
         // 1. Distance traveled in this time step S = V * t
-        posX += simSpeedX * dt;
-        posY += simSpeedY * dt;
+        posX += simSpeedX * deltaT;
+        posY += simSpeedY * deltaT;
         // 2. Water drag force F = k * V^2
         double dragX = dragCoefficient * (relX * relMagnitude);
         double dragY = dragCoefficient * (relY * relMagnitude);
-        // 3. Deceleration a = F / m
-        double decX = dragX / mass;
-        double decY = dragY / mass;
-        // 4. Speed update
-        simSpeedX -= decX * dt;
-        simSpeedY -= decY * dt;
-        // 5. Relative Speed for next loop step
+        // 3. Adding Thrusting Force
+        double forceX = currentThrustX - dragX;
+        double forceY = currentThrustY - dragY;
+        // 4. Acceleration a = F / m
+        double accelX = forceX / mass;
+        double accelY = forceY / mass;
+        // 5. Speed update
+        simSpeedX += accelX * deltaT;
+        simSpeedY += accelY * deltaT;
+        // 6. Relative Speed for next loop step
         relX = simSpeedX - waterX;
         relY = simSpeedY - waterY;
         relMagnitude = std::sqrt(relX * relX + relY * relY);
+
+        simTime += deltaT;
     }
     Position stopPos;
     stopPos.x = posX;
@@ -54,44 +61,23 @@ Position Ferry::calcBreakingDist(double waterX, double waterY) const {
     return stopPos;
 }
 
-void Ferry::exportTelemetry(double waterX, double waterY) {
-    std::ofstream file("telemetry.csv");
-    if (!file.is_open()) {
-        std::cout << "Error: File cannot be open" << std::endl;
-        return;
-    }
-    file << "Time,PosX,PosY,SpeedX,SpeedY\n";
-
-    double posX = currentPos.x;
-    double posY = currentPos.y;
-    double currentTime = 0.0;
-    double dt = 1.0;
-    double simSpeedX = speedX;
-    double simSpeedY = speedY;
-    double relX = simSpeedX - waterX;
-    double relY = simSpeedY - waterY;
-
+void Ferry::updatePhysics(double waterX, double waterY) {
+    double relX = speedX - waterX;
+    double relY = speedY - waterY;
     double relMagnitude = std::sqrt(relX * relX + relY * relY);
-    while (relMagnitude > 0.1) {
-        file << currentTime << "," << posX << "," << posY << "," << simSpeedX << "," << simSpeedY << std::endl;
-        posX += simSpeedX * dt;
-        posY += simSpeedY * dt;
+    currentPos.x += speedX * deltaT;
+    currentPos.y += speedY * deltaT;
+    double dragX = dragCoefficient * (relMagnitude * relX);
+    double dragY = dragCoefficient * (relMagnitude * relY);
+    double forceX = currentThrustX - dragX;
+    double forceY = currentThrustY - dragY;
+    double accelX = forceX / mass;
+    double accelY = forceY / mass;
+    speedX += accelX * deltaT;
+    speedY += accelY * deltaT;
+}
 
-        double dragX = dragCoefficient * (relX * relMagnitude);
-        double dragY = dragCoefficient * (relY * relMagnitude);
-
-        double decX = dragX / mass;
-        double decY = dragY / mass;
-
-        simSpeedX -= decX * dt;
-        simSpeedY -= decY * dt;
-
-        relX = simSpeedX - waterX;
-        relY = simSpeedY - waterY;
-        relMagnitude = std::sqrt(relX * relX + relY * relY);
-
-        currentTime += dt;
-    }
-    file.close();
-
+void Ferry::setThrust(double tx, double ty) {
+    currentThrustX = tx;
+    currentThrustY = ty;
 }

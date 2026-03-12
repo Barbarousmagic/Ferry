@@ -15,15 +15,19 @@ private:
     Position currentPos;
     double speedX;
     double speedY;
+    double currentThrustX;
+    double currentThrustY;
+    double deltaT;
     double dragCoefficient;
 public:
-    Ferry(double m, Position startPos, double sx, double sy, double drag);
-    Position calcBreakingDist(double waterX, double waterY) const;
-    void exportTelemetry(double waterX, double waterY);
+    Ferry(double m, Position startPos, double sx, double sy, double dt, double drag);
+    Position calcDist(double waterX, double waterY) const;
+    void updatePhysics(double waterX, double waterY);
     double getMass();
     double getSpeedX() const;
     double getSpeedY() const;
     Position getPos() const;
+    void setThrust(double tx, double ty);
 };
 
 
