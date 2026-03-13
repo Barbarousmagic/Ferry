@@ -17,7 +17,7 @@ try:
     plt.scatter(data['PosX'].iloc[-1], data['PosY'].iloc[-1], color = 'orange', s = 100, label = 'Stop', zorder = 5)
 
     # goal port
-    plt.scatter(1500, 1500, color = 'red', s = 200, marker = '*', label = 'Target Port (1500, 1500)', zorder = 5)
+    plt.scatter(1500, 5000, color = 'red', s = 200, marker = '*', label = 'Target Port (1500, 5000)', zorder = 5)
 
     plt.title('IRT Ferry')
     plt.xlabel('X position (meters)')

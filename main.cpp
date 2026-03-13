@@ -8,11 +8,11 @@
 
 int main() {
     double ferryMass = 15000.0;
-    double speedX = 6.0;
-    double speedY = 0.0;
-    double waterX = -1.0;
-    double waterY = -10.0;
-    double dt = 1.0;
+    double speedX = 0.0;
+    double speedY = -20.0;
+    double waterX = -2.0;
+    double waterY = 1000.0;
+    double dt = 0.1;
     std::cout << "--- IRT Ferry Simulator ---" << std::endl;
 
     /*std::cout << "Enter ferry mass (kg): ";
@@ -40,8 +40,8 @@ int main() {
 
     Position start = {0.0, 0.0};
     Ferry myFerry(ferryMass, start, speedX, speedY, dt, 500.0);
-    Position port = {1500.0, 1500.0};
-    Controller myAi(myFerry, start, port, 25.0, 1, 100);
+    Position port = {1500.0, 5000.0};
+    Controller myAi(myFerry, start, port, 500.0, 1.0, 5000.0);
     std::ofstream file("telemetry.csv");
     file << "Time,PosX,PosY,SpeedX,SpeedY\n";
     double currentTime = 0.0;
@@ -49,7 +49,7 @@ int main() {
     // LOOP
     while (!myAi.isDocked() && currentTime < 1000.0) {
         // 1. Input / AI CONTROL
-        myAi.update(dt);
+        myAi.update(dt, waterX, waterY);
         // 2. UPDATE PHYSICS
         myFerry.updatePhysics(waterX, waterY);
          // 3. LOG

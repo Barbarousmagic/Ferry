@@ -20,7 +20,7 @@ private:
     double lastErrorLat;
 public:
     Controller(Ferry& f, Position start, Position t, double kp_value, double ki_value, double kd_value);
-    void update(double dt);
+    void update(double dt, double waterX, double waterY);
     bool isDocked();
 };
 

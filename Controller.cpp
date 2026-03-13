@@ -8,7 +8,7 @@ Controller::Controller(Ferry& f, Position start, Position t, double kp_value, do
     : myFerry(f), startPoint(start), target(t), Kp(kp_value), Ki(ki_value), Kd(kd_value),
         integralFwd(0.0), integralLat(0.0), lastErrorFwd(0.0), lastErrorLat(0.0) {}
 
-void Controller::update(double dt) {
+void Controller::update(double dt, double waterX, double waterY) {
     Position currentPos = myFerry.getPos();
     double AB_x = target.x - startPoint.x;
     double AB_y = target.y - startPoint.y;
@@ -35,6 +35,10 @@ void Controller::update(double dt) {
     if (integralFwd < -maxIntegral) integralFwd = -maxIntegral;
     if (integralLat > maxIntegral) integralLat = maxIntegral;
     if (integralLat < -maxIntegral) integralLat = -maxIntegral;
+    if (lastErrorFwd == 0.0 && lastErrorLat == 0.0) {
+        lastErrorFwd = errorFwd;
+        lastErrorLat = errorLat;
+    }
 
     double derivFwd = (errorFwd - lastErrorFwd) / dt;
     double derivLat = (errorLat - lastErrorLat) / dt;
@@ -44,6 +48,24 @@ void Controller::update(double dt) {
 
     double thrustX = (forwardThrust * dirX) + (lateralThrust * perpX);
     double thrustY = (forwardThrust * dirY) + (lateralThrust * perpY);
+
+    double k = 500.0;
+    double speedX = myFerry.getSpeedX();
+    double speedY = myFerry.getSpeedY();
+    double relX = speedX - waterX;
+    double relY = speedY - waterY;
+    double relMag = std::sqrt(relX * relX + relY * relY);
+    double actualDragX = k * relMag * relX;
+    double actualDragY = k * relMag * relY;
+
+    double idealMag = std::sqrt(speedX * speedX + speedY * speedY);
+    double idealDragX = k * idealMag * speedX;
+    double idealDragY = k * idealMag * speedY;
+
+    double ffThrustX = actualDragX - idealDragX;
+    double ffThrustY = actualDragY - idealDragY;
+    thrustX += ffThrustX;
+    thrustY += ffThrustY;
     myFerry.setThrust(thrustX, thrustY);
     lastErrorFwd = errorFwd;
     lastErrorLat = errorLat;
