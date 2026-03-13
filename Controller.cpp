@@ -4,33 +4,50 @@
 
 #include "Controller.h"
 #include <cmath>
-Controller::Controller(Ferry& f, Position t, double kp_value, double ki_value, double kd_value)
-    : myFerry(f), target(t), Kp(kp_value), Ki(ki_value), Kd(kd_value),
-        integralX(0.0), integralY(0.0), lastErrorX(0.0), lastErrorY(0.0) {}
+Controller::Controller(Ferry& f, Position start, Position t, double kp_value, double ki_value, double kd_value)
+    : myFerry(f), startPoint(start), target(t), Kp(kp_value), Ki(ki_value), Kd(kd_value),
+        integralFwd(0.0), integralLat(0.0), lastErrorFwd(0.0), lastErrorLat(0.0) {}
 
 void Controller::update(double dt) {
     Position currentPos = myFerry.getPos();
+    double AB_x = target.x - startPoint.x;
+    double AB_y = target.y - startPoint.y;
 
-    double errorX = target.x - currentPos.x;
-    double errorY = target.y - currentPos.y;
+    double AP_x = currentPos.x - startPoint.x;
+    double AP_y = currentPos.y - startPoint.y;
 
-    integralX += errorX * dt;
-    integralY += errorY * dt;
+    double path_length = std::sqrt(AB_x * AB_x + AB_y * AB_y);
 
-    double maxIntegral = 75000.0;
-    if (integralX > maxIntegral) integralX = maxIntegral;
-    if (integralX < -maxIntegral) integralX = -maxIntegral;
-    if (integralY > maxIntegral) integralY = maxIntegral;
-    if (integralY < -maxIntegral) integralY = -maxIntegral;
+    double dirX = AB_x / path_length;
+    double dirY = AB_y / path_length;
+    double perpX = -dirY;
+    double perpY = dirX;
 
-    double derivativeX = (errorX - lastErrorX) / dt;
-    double derivativeY = (errorX - lastErrorY) / dt;
+    double errorFwd = (target.x - currentPos.x) * dirX + (target.y - currentPos.y) * dirY;
+    double signedCrossProduct = AB_x * AP_y - AB_y * AP_x;
+    double errorLat = signedCrossProduct / path_length; // XTE
 
-    double thrustX = Kp * errorX + Ki * integralX + Kd * derivativeX;
-    double thrustY = Kp * errorY + Ki * integralY + Kd * derivativeY;
+    integralFwd += errorFwd * dt;
+    integralLat += errorLat * dt;
+    // Anti-Windup
+    double maxIntegral = 50000.0;
+    if (integralFwd > maxIntegral) integralFwd = maxIntegral;
+    if (integralFwd < -maxIntegral) integralFwd = -maxIntegral;
+    if (integralLat > maxIntegral) integralLat = maxIntegral;
+    if (integralLat < -maxIntegral) integralLat = -maxIntegral;
+
+    double derivFwd = (errorFwd - lastErrorFwd) / dt;
+    double derivLat = (errorLat - lastErrorLat) / dt;
+    double forwardThrust = Kp * errorFwd + Ki * integralFwd + Kd * derivFwd;
+    double lateralThrust = 15 * Kp * (-errorLat) + Ki * (-integralLat) + 15 * Kd * (-derivLat);
+
+
+    double thrustX = (forwardThrust * dirX) + (lateralThrust * perpX);
+    double thrustY = (forwardThrust * dirY) + (lateralThrust * perpY);
     myFerry.setThrust(thrustX, thrustY);
-    lastErrorX = errorX;
-    lastErrorY = errorY;
+    lastErrorFwd = errorFwd;
+    lastErrorLat = errorLat;
+
 }
 
 bool Controller::isDocked() {

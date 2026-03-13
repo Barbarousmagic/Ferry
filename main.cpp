@@ -7,15 +7,15 @@
 
 
 int main() {
-    double ferryMass;
-    double speedX;
-    double speedY;
-    double waterX;
-    double waterY;
-    double dt;
+    double ferryMass = 15000.0;
+    double speedX = 6.0;
+    double speedY = 0.0;
+    double waterX = -1.0;
+    double waterY = -10.0;
+    double dt = 1.0;
     std::cout << "--- IRT Ferry Simulator ---" << std::endl;
 
-    std::cout << "Enter ferry mass (kg): ";
+    /*std::cout << "Enter ferry mass (kg): ";
     std::cin >> ferryMass;
 
     while (std::cin.fail()) {
@@ -36,18 +36,18 @@ int main() {
     std::cin >> waterY;
 
     std::cout << "Enter time step (s): ";
-    std::cin >> dt;
+    std::cin >> dt;*/
 
     Position start = {0.0, 0.0};
     Ferry myFerry(ferryMass, start, speedX, speedY, dt, 500.0);
     Position port = {1500.0, 1500.0};
-    Controller myAi(myFerry, port, 25.0, 0.5, 0.0);
+    Controller myAi(myFerry, start, port, 25.0, 1, 100);
     std::ofstream file("telemetry.csv");
     file << "Time,PosX,PosY,SpeedX,SpeedY\n";
     double currentTime = 0.0;
     std::cout << "\nStarting simulation..." << std::endl;
     // LOOP
-    while (!myAi.isDocked() && currentTime < 5000.0) {
+    while (!myAi.isDocked() && currentTime < 1000.0) {
         // 1. Input / AI CONTROL
         myAi.update(dt);
         // 2. UPDATE PHYSICS
