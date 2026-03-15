@@ -11,6 +11,9 @@ struct Position {
 
 class Ferry {
 private:
+    int id;
+    Ferry* nextFerry;
+    bool isWaiting;
     double mass;
     Position currentPos;
     double speedX;
@@ -20,14 +23,19 @@ private:
     double deltaT;
     double dragCoefficient;
 public:
-    Ferry(double m, Position startPos, double sx, double sy, double dt, double drag);
+    Ferry(int id, double m, Position startPos, double sx, double sy, double dt, double drag);
     Position calcDist(double waterX, double waterY) const;
     void updatePhysics(double waterX, double waterY);
+    int getID();
+    Ferry* getNextFerry ();
+    bool getWaitStatus ();
     double getMass();
     double getSpeedX() const;
     double getSpeedY() const;
     Position getPos() const;
     void setThrust(double tx, double ty);
+
+    void setNextFerry(Ferry* next);
 };
 
 

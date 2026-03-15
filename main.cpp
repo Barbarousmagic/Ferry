@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <vector>
 #include "Ferry.h"
 #include "Controller.h"
 
@@ -9,9 +10,9 @@
 int main() {
     double ferryMass = 15000.0;
     double speedX = 0.0;
-    double speedY = -20.0;
+    double speedY = 0.0;
     double waterX = -2.0;
-    double waterY = 1000.0;
+    double waterY = -5.0;
     double dt = 0.1;
     std::cout << "--- IRT Ferry Simulator ---" << std::endl;
 
@@ -38,33 +39,60 @@ int main() {
     std::cout << "Enter time step (s): ";
     std::cin >> dt;*/
 
-    Position start = {0.0, 0.0};
-    Ferry myFerry(ferryMass, start, speedX, speedY, dt, 500.0);
+    std::vector<Ferry*> fleet;
+    std::vector<Controller*> ais;
     Position port = {1500.0, 5000.0};
-    Controller myAi(myFerry, start, port, 500.0, 1.0, 5000.0);
+    for (int i = 0; i < 5; i++) {
+        Position start = {500.0 * i, 0};
+        Ferry* f = new Ferry(i, ferryMass, start, speedX, speedY, dt, 500.0);
+        fleet.push_back(f);
+        if (i > 0) {fleet[i]->setNextFerry(fleet[i-1]);}
+        Controller* ai = new Controller(*f, start, port, 500.0, 1.0, 5000.0);
+        ais.push_back(ai);
+
+    }
     std::ofstream file("telemetry.csv");
-    file << "Time,PosX,PosY,SpeedX,SpeedY\n";
+    file << "Time,FerryID,PosX,PosY,SpeedX,SpeedY\n";
     double currentTime = 0.0;
     std::cout << "\nStarting simulation..." << std::endl;
     // LOOP
-    while (!myAi.isDocked() && currentTime < 1000.0) {
-        // 1. Input / AI CONTROL
-        myAi.update(dt, waterX, waterY);
-        // 2. UPDATE PHYSICS
-        myFerry.updatePhysics(waterX, waterY);
-         // 3. LOG
-        file << currentTime << ","
-             << myFerry.getPos().x << "," << myFerry.getPos().y << ","
-             << myFerry.getSpeedX() << "," << myFerry.getSpeedY() << std::endl;
+    while (currentTime < 1000.0) {
+        bool allDocked = true;
+        for (int i = 0; i < fleet.size(); i++) {
+            // 1. Input / AI CONTROL
+            ais[i]->update(dt, waterX, waterY);
+            // 2. UPDATE PHYSICS
+            fleet[i]->updatePhysics(waterX, waterY);
+            // 3. LOG
+            Position pos = fleet[i]->getPos();
+            file << currentTime << "," << fleet[i]->getID() << ","
+                 << pos.x << "," << pos.y << ","
+                 << fleet[i]->getSpeedX() << "," << fleet[i]->getSpeedY() << std::endl;
+            double distToPort = std::sqrt(std::pow(pos.x - port.x, 2) + std::pow(pos.y - port.y, 2));
+            if (distToPort > 10.0) allDocked = false;
+        }
+        if (!ais.empty() && ais[0]->isDocked()) {
+            delete ais[0];
+            delete fleet[0];
+            ais.erase(ais.begin());
+            fleet.erase(fleet.begin());
+            if (!fleet.empty())  { fleet[0]->setNextFerry(nullptr); }
+        }
+        if (std::fmod(currentTime, 100.0) < dt) {
+            std::cout << "Simulating... Time: " << currentTime << "s" << std::endl;
+        }
+        if (allDocked) {
+            std::cout << "SUCCESS: All ferries docked at port at time " << currentTime << "s!" << std::endl;
+            break;
+        }
         currentTime += dt;
     }
-    if (myAi.isDocked()) {
-        std::cout << "SUCCESS: Ferry docked at time " << currentTime << " s!" << std::endl;
-    } else {
-        std::cout << "WARNING: Time out! Ferry lost at sea." << std::endl;
-    }
     file.close();
-
-
+    for (int i = 0; i < fleet.size(); i++) {
+        delete ais[i];
+        delete fleet[i];
+    }
+    ais.clear();
+    fleet.clear();
     return 0;
 }

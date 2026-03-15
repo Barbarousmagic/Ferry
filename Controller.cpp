@@ -4,12 +4,14 @@
 
 #include "Controller.h"
 #include <cmath>
+#include <algorithm>
 Controller::Controller(Ferry& f, Position start, Position t, double kp_value, double ki_value, double kd_value)
     : myFerry(f), startPoint(start), target(t), Kp(kp_value), Ki(ki_value), Kd(kd_value),
         integralFwd(0.0), integralLat(0.0), lastErrorFwd(0.0), lastErrorLat(0.0) {}
 
 void Controller::update(double dt, double waterX, double waterY) {
     Position currentPos = myFerry.getPos();
+    Ferry* leader = myFerry.getNextFerry();
     double AB_x = target.x - startPoint.x;
     double AB_y = target.y - startPoint.y;
 
@@ -44,8 +46,6 @@ void Controller::update(double dt, double waterX, double waterY) {
     double derivLat = (errorLat - lastErrorLat) / dt;
     double forwardThrust = Kp * errorFwd + Ki * integralFwd + Kd * derivFwd;
     double lateralThrust = 15 * Kp * (-errorLat) + Ki * (-integralLat) + 15 * Kd * (-derivLat);
-
-
     double thrustX = (forwardThrust * dirX) + (lateralThrust * perpX);
     double thrustY = (forwardThrust * dirY) + (lateralThrust * perpY);
 
@@ -66,9 +66,21 @@ void Controller::update(double dt, double waterX, double waterY) {
     double ffThrustY = actualDragY - idealDragY;
     thrustX += ffThrustX;
     thrustY += ffThrustY;
-    myFerry.setThrust(thrustX, thrustY);
+    if (leader != nullptr) {
+        Position nextPos = leader->getPos();
+        double distToNext = std::sqrt(pow(currentPos.x - nextPos.x, 2) + pow(currentPos.y - nextPos.y, 2));
+        if (distToNext < 150.0) {
+            thrustX = - waterX * relMag * k;
+            thrustY = - waterY * relMag* k;
+        }
+    }
+    double maxThrust = 80000.0;
+    thrustX = std::clamp(thrustX, -maxThrust, maxThrust);
+    thrustY = std::clamp(thrustY, -maxThrust, maxThrust);
     lastErrorFwd = errorFwd;
     lastErrorLat = errorLat;
+    myFerry.setThrust(thrustX, thrustY);
+
 
 }
 
@@ -78,5 +90,5 @@ bool Controller::isDocked() {
     double errorY = target.y - currentPos.y;
     double distance = std::sqrt(errorX * errorX + errorY * errorY);
 
-    return distance < 10.0;
+    return distance < 20.0;
 }

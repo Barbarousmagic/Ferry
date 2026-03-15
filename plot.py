@@ -8,7 +8,8 @@ try:
     plt.figure(figsize=(10, 10))
 
     # Ferry trajectory
-    plt.plot(data['PosX'], data['PosY'], label = 'Ferry Trajectory', color = 'blue', linewidth = 2)
+    for ferry_id, ferry_data in data.groupby('FerryID'):
+        plt.plot(ferry_data['PosX'], ferry_data['PosY'], label=f'Ferry {ferry_id}')
 
     # Start point
     plt.scatter(data['PosX'].iloc[0], data['PosY'].iloc[0], color = 'green', s = 100, label = 'Start', zorder = 5)

@@ -7,7 +7,10 @@
 #include <fstream>
 #include <iostream>
 
-Ferry::Ferry(double m, Position startPos, double sx, double sy, double dt, double drag) {
+Ferry::Ferry(int index, double m, Position startPos, double sx, double sy, double dt, double drag) {
+    id = index;
+    nextFerry = nullptr;
+    isWaiting = true;
     mass = m;
     currentPos = startPos;
     speedX = sx;
@@ -18,10 +21,14 @@ Ferry::Ferry(double m, Position startPos, double sx, double sy, double dt, doubl
     dragCoefficient = drag;
 }
 
+int Ferry::getID() {return id;}
+Ferry* Ferry::getNextFerry() {return nextFerry;}
+bool Ferry::getWaitStatus() { return isWaiting;}
 double Ferry::getMass() { return mass; }
 Position Ferry::getPos() const { return currentPos; }
 double Ferry::getSpeedX() const { return speedX; }
 double Ferry::getSpeedY() const { return speedY; }
+
 
 Position Ferry::calcDist(double waterX, double waterY) const {
     double posX = currentPos.x;
@@ -80,4 +87,8 @@ void Ferry::updatePhysics(double waterX, double waterY) {
 void Ferry::setThrust(double tx, double ty) {
     currentThrustX = tx;
     currentThrustY = ty;
+}
+
+void Ferry::setNextFerry(Ferry* next) {
+    nextFerry = next;
 }
