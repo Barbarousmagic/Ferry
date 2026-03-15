@@ -2,6 +2,7 @@
 #include <fstream>
 #include <cmath>
 #include <vector>
+#include <memory>
 #include "Ferry.h"
 #include "Controller.h"
 
@@ -39,17 +40,14 @@ int main() {
     std::cout << "Enter time step (s): ";
     std::cin >> dt;*/
 
-    std::vector<Ferry*> fleet;
-    std::vector<Controller*> ais;
+    std::vector<std::unique_ptr<Ferry>> fleet;
+    std::vector<std::unique_ptr<Controller>> ais;
     Position port = {1500.0, 5000.0};
     for (int i = 0; i < 5; i++) {
         Position start = {500.0 * i, 0};
-        Ferry* f = new Ferry(i, ferryMass, start, speedX, speedY, dt, 500.0);
-        fleet.push_back(f);
-        if (i > 0) {fleet[i]->setNextFerry(fleet[i-1]);}
-        Controller* ai = new Controller(*f, start, port, 500.0, 1.0, 5000.0);
-        ais.push_back(ai);
-
+        fleet.push_back(std::make_unique<Ferry>(i, ferryMass, start, speedX, speedY, dt, 500.0));
+        if (i > 0) {fleet[i]->setNextFerry(fleet[i-1].get());}
+        ais.push_back(std::make_unique<Controller>(*fleet[i], start, port, 500.0, 1.0, 5000.0));
     }
     std::ofstream file("telemetry.csv");
     file << "Time,FerryID,PosX,PosY,SpeedX,SpeedY\n";
@@ -72,8 +70,6 @@ int main() {
             if (distToPort > 10.0) allDocked = false;
         }
         if (!ais.empty() && ais[0]->isDocked()) {
-            delete ais[0];
-            delete fleet[0];
             ais.erase(ais.begin());
             fleet.erase(fleet.begin());
             if (!fleet.empty())  { fleet[0]->setNextFerry(nullptr); }
@@ -88,11 +84,5 @@ int main() {
         currentTime += dt;
     }
     file.close();
-    for (int i = 0; i < fleet.size(); i++) {
-        delete ais[i];
-        delete fleet[i];
-    }
-    ais.clear();
-    fleet.clear();
     return 0;
 }
