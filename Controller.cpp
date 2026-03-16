@@ -73,8 +73,8 @@ void Controller::update(double dt, double waterX, double waterY) {
             Position nextPos = leader->getPos();
             double distToNext = std::sqrt(pow(currentPos.x - nextPos.x, 2) + pow(currentPos.y - nextPos.y, 2));
             if (distToNext < 150.0) {
-                thrustX = - waterX * relMag * k;
-                thrustY = - waterY * relMag* k;
+                thrustX = 0.0;
+                thrustY = 0.0;
             }
         }
     }

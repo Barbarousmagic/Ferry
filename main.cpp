@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <cmath>
 #include <vector>
 #include <memory>
@@ -9,46 +10,46 @@
 
 
 int main() {
-    double ferryMass = 15000.0;
-    double speedX = 0.0;
-    double speedY = 0.0;
-    double waterX = -2.0;
-    double waterY = -5.0;
-    double dt = 0.1;
-    std::cout << "--- IRT Ferry Simulator ---" << std::endl;
-
-    /*std::cout << "Enter ferry mass (kg): ";
-    std::cin >> ferryMass;
-
-    while (std::cin.fail()) {
-        std::cin.clear();
-        std::cin.ignore(10000, '\n');
-        std::cout << "Invalid input! Please enter a number for mass (kg): ";
-        std::cin >> ferryMass;
+    double ferryMass;
+    double speedBoatMass;
+    double speedX;
+    double speedY;
+    double waterX;
+    double waterY;
+    double dt;
+    std::ifstream configFile("config.txt");
+    if (!configFile.is_open()) {
+        std::cerr << "Error: config.txt not found" << std::endl;
+        return 1;
     }
-
-    std::cout << "Enter start speedX (m/s): ";
-    std::cin >> speedX;
-    std::cout << "Enter start speedY (m/s): ";
-    std::cin >> speedY;
-
-    std::cout << "Enter water X-speed (m/s): ";
-    std::cin >> waterX;
-    std::cout << "Enter water Y-speed (m/s): ";
-    std::cin >> waterY;
-
-    std::cout << "Enter time step (s): ";
-    std::cin >> dt;*/
-
+    std::string key;
+    double value;
+    std::vector<std::string> shipTypes;
+    while (configFile >> key) {
+        if (key == "ferryMass") configFile >> ferryMass;
+        else if (key == "speedBoatMass") configFile >> speedBoatMass;
+        else if (key == "speedX") configFile >> speedX;
+        else if (key == "speedY") configFile >> speedY;
+        else if (key == "waterX") configFile >> waterX;
+        else if (key == "waterY") configFile >> waterY;
+        else if (key == "dt") configFile >> dt;
+        else if (key == "ship") {
+            std::string type;
+            configFile >> type;
+            shipTypes.push_back(type);
+        }
+    }
+    configFile.close();
+    std::cout << "--- IRT Ferry Simulator ---" << std::endl;
     std::vector<std::unique_ptr<Vessel>> fleet;
     std::vector<std::unique_ptr<Controller>> ais;
     Position port = {1500.0, 5000.0};
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < shipTypes.size(); i++) {
         Position start = {500.0 * i, 0};
-        if (i == 0) {
-            fleet.push_back(std::make_unique<Speedboat>(i, 2000.0, start, speedX, speedY, dt, 100.0));
+        if (shipTypes[i] == "Speedboat") {
+            fleet.push_back(std::make_unique<Speedboat>(i, speedBoatMass, start, speedX, speedY, dt, 100.0));
         }
-        else {
+        else if (shipTypes[i] == "Ferry"){
             fleet.push_back(std::make_unique<Ferry>(i, ferryMass, start, speedX, speedY, dt, 500.0));
         }
         if (i > 0) {
@@ -80,13 +81,16 @@ int main() {
             double distToPort = std::sqrt(std::pow(pos.x - port.x, 2) + std::pow(pos.y - port.y, 2));
             if (distToPort > 10.0) allDocked = false;
         }
-        if (!ais.empty() && ais[0]->isDocked()) {
-            ais.erase(ais.begin());
-            fleet.erase(fleet.begin());
-            if (!fleet.empty()) {
-                Ferry* currFerry = dynamic_cast<Ferry*>(fleet[0].get());
-                if (currFerry) currFerry->setNextFerry(nullptr);
+        for (int i = 0; i < ais.size(); ) {
+            if (ais[i]->isDocked()) {
+                ais.erase(ais.begin() + i);
+                fleet.erase(fleet.begin() + i);
+                if (i == 0 && !fleet.empty()) {
+                    Ferry* currFerry = dynamic_cast<Ferry*>(fleet[0].get());
+                    if (currFerry) currFerry->setNextFerry(nullptr);
+                }
             }
+            else i++;
         }
         if (std::fmod(currentTime, 100.0) < dt) {
             std::cout << "Simulating... Time: " << currentTime << "s" << std::endl;
@@ -97,6 +101,7 @@ int main() {
         }
         currentTime += dt;
     }
+    if (!fleet.empty()) std::cout << "TIMEOUT: Simulation ended but " << fleet.size() << " vessels are still at sea" << std::endl;
     file.close();
     return 0;
 }
