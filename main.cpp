@@ -5,7 +5,7 @@
 #include <memory>
 #include "Ferry.h"
 #include "Controller.h"
-
+#include "Speedboat.h"
 
 
 int main() {
@@ -40,13 +40,24 @@ int main() {
     std::cout << "Enter time step (s): ";
     std::cin >> dt;*/
 
-    std::vector<std::unique_ptr<Ferry>> fleet;
+    std::vector<std::unique_ptr<Vessel>> fleet;
     std::vector<std::unique_ptr<Controller>> ais;
     Position port = {1500.0, 5000.0};
     for (int i = 0; i < 5; i++) {
         Position start = {500.0 * i, 0};
-        fleet.push_back(std::make_unique<Ferry>(i, ferryMass, start, speedX, speedY, dt, 500.0));
-        if (i > 0) {fleet[i]->setNextFerry(fleet[i-1].get());}
+        if (i == 0) {
+            fleet.push_back(std::make_unique<Speedboat>(i, 2000.0, start, speedX, speedY, dt, 100.0));
+        }
+        else {
+            fleet.push_back(std::make_unique<Ferry>(i, ferryMass, start, speedX, speedY, dt, 500.0));
+        }
+        if (i > 0) {
+            Ferry* currFerry = dynamic_cast<Ferry*>(fleet[i].get());
+            Ferry* prevFerry = dynamic_cast<Ferry*>(fleet[i-1].get());
+            if (currFerry && prevFerry) {
+                currFerry->setNextFerry(prevFerry);
+            }
+        }
         ais.push_back(std::make_unique<Controller>(*fleet[i], start, port, 500.0, 1.0, 5000.0));
     }
     std::ofstream file("telemetry.csv");
@@ -72,7 +83,10 @@ int main() {
         if (!ais.empty() && ais[0]->isDocked()) {
             ais.erase(ais.begin());
             fleet.erase(fleet.begin());
-            if (!fleet.empty())  { fleet[0]->setNextFerry(nullptr); }
+            if (!fleet.empty()) {
+                Ferry* currFerry = dynamic_cast<Ferry*>(fleet[0].get());
+                if (currFerry) currFerry->setNextFerry(nullptr);
+            }
         }
         if (std::fmod(currentTime, 100.0) < dt) {
             std::cout << "Simulating... Time: " << currentTime << "s" << std::endl;

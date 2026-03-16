@@ -5,13 +5,13 @@
 #include "Controller.h"
 #include <cmath>
 #include <algorithm>
-Controller::Controller(Ferry& f, Position start, Position t, double kp_value, double ki_value, double kd_value)
-    : myFerry(f), startPoint(start), target(t), Kp(kp_value), Ki(ki_value), Kd(kd_value),
+Controller::Controller(Vessel& f, Position start, Position t, double kp_value, double ki_value, double kd_value)
+    : myVessel(f), startPoint(start), target(t), Kp(kp_value), Ki(ki_value), Kd(kd_value),
         integralFwd(0.0), integralLat(0.0), lastErrorFwd(0.0), lastErrorLat(0.0) {}
 
 void Controller::update(double dt, double waterX, double waterY) {
-    Position currentPos = myFerry.getPos();
-    Ferry* leader = myFerry.getNextFerry();
+    Position currentPos = myVessel.getPos();
+
     double AB_x = target.x - startPoint.x;
     double AB_y = target.y - startPoint.y;
 
@@ -50,8 +50,8 @@ void Controller::update(double dt, double waterX, double waterY) {
     double thrustY = (forwardThrust * dirY) + (lateralThrust * perpY);
 
     double k = 500.0;
-    double speedX = myFerry.getSpeedX();
-    double speedY = myFerry.getSpeedY();
+    double speedX = myVessel.getSpeedX();
+    double speedY = myVessel.getSpeedY();
     double relX = speedX - waterX;
     double relY = speedY - waterY;
     double relMag = std::sqrt(relX * relX + relY * relY);
@@ -66,12 +66,16 @@ void Controller::update(double dt, double waterX, double waterY) {
     double ffThrustY = actualDragY - idealDragY;
     thrustX += ffThrustX;
     thrustY += ffThrustY;
-    if (leader != nullptr) {
-        Position nextPos = leader->getPos();
-        double distToNext = std::sqrt(pow(currentPos.x - nextPos.x, 2) + pow(currentPos.y - nextPos.y, 2));
-        if (distToNext < 150.0) {
-            thrustX = - waterX * relMag * k;
-            thrustY = - waterY * relMag* k;
+    Ferry* asFerry = dynamic_cast<Ferry*>(&myVessel);
+    if (asFerry != nullptr) {
+        Ferry* leader = asFerry->getNextFerry();
+        if (leader != nullptr) {
+            Position nextPos = leader->getPos();
+            double distToNext = std::sqrt(pow(currentPos.x - nextPos.x, 2) + pow(currentPos.y - nextPos.y, 2));
+            if (distToNext < 150.0) {
+                thrustX = - waterX * relMag * k;
+                thrustY = - waterY * relMag* k;
+            }
         }
     }
     double maxThrust = 80000.0;
@@ -79,13 +83,13 @@ void Controller::update(double dt, double waterX, double waterY) {
     thrustY = std::clamp(thrustY, -maxThrust, maxThrust);
     lastErrorFwd = errorFwd;
     lastErrorLat = errorLat;
-    myFerry.setThrust(thrustX, thrustY);
+    myVessel.setThrust(thrustX, thrustY);
 
 
 }
 
 bool Controller::isDocked() {
-    Position currentPos = myFerry.getPos();
+    Position currentPos = myVessel.getPos();
     double errorX = target.x - currentPos.x;
     double errorY = target.y - currentPos.y;
     double distance = std::sqrt(errorX * errorX + errorY * errorY);

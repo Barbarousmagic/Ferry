@@ -7,4 +7,8 @@ add_executable(Ferry main.cpp
         Ferry.cpp
         Ferry.h
         Controller.cpp
-        Controller.h)
+        Controller.h
+        Vessel.cpp
+        Vessel.h
+        Speedboat.cpp
+        Speedboat.h)

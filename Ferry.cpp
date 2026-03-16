@@ -7,29 +7,13 @@
 #include <fstream>
 #include <iostream>
 
-Ferry::Ferry(int index, double m, Position startPos, double sx, double sy, double dt, double drag) {
-    id = index;
+Ferry::Ferry(int index, double m, Position pos, double sx, double sy, double dt, double drag)
+    : Vessel(index, m, pos, sx, sy, dt, drag) {
     nextFerry = nullptr;
-    isWaiting = true;
-    mass = m;
-    currentPos = startPos;
-    speedX = sx;
-    speedY = sy;
     currentThrustX = 0.0;
     currentThrustY = 0.0;
-    deltaT = dt;
-    dragCoefficient = drag;
 }
-
-int Ferry::getID() {return id;}
 Ferry* Ferry::getNextFerry() {return nextFerry;}
-bool Ferry::getWaitStatus() { return isWaiting;}
-double Ferry::getMass() { return mass; }
-Position Ferry::getPos() const { return currentPos; }
-double Ferry::getSpeedX() const { return speedX; }
-double Ferry::getSpeedY() const { return speedY; }
-
-
 Position Ferry::calcDist(double waterX, double waterY) const {
     double posX = currentPos.x;
     double posY = currentPos.y;
@@ -68,26 +52,6 @@ Position Ferry::calcDist(double waterX, double waterY) const {
     return stopPos;
 }
 
-void Ferry::updatePhysics(double waterX, double waterY) {
-    double relX = speedX - waterX;
-    double relY = speedY - waterY;
-    double relMagnitude = std::sqrt(relX * relX + relY * relY);
-    currentPos.x += speedX * deltaT;
-    currentPos.y += speedY * deltaT;
-    double dragX = dragCoefficient * (relMagnitude * relX);
-    double dragY = dragCoefficient * (relMagnitude * relY);
-    double forceX = currentThrustX - dragX;
-    double forceY = currentThrustY - dragY;
-    double accelX = forceX / mass;
-    double accelY = forceY / mass;
-    speedX += accelX * deltaT;
-    speedY += accelY * deltaT;
-}
-
-void Ferry::setThrust(double tx, double ty) {
-    currentThrustX = tx;
-    currentThrustY = ty;
-}
 
 void Ferry::setNextFerry(Ferry* next) {
     nextFerry = next;

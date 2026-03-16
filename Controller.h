@@ -8,7 +8,7 @@
 
 class Controller {
 private:
-    Ferry& myFerry;
+    Vessel& myVessel;
     Position startPoint;
     Position target;
     double Kp;
@@ -19,7 +19,7 @@ private:
     double lastErrorFwd;
     double lastErrorLat;
 public:
-    Controller(Ferry& f, Position start, Position t, double kp_value, double ki_value, double kd_value);
+    Controller(Vessel& f, Position start, Position t, double kp_value, double ki_value, double kd_value);
     void update(double dt, double waterX, double waterY);
     bool isDocked();
 };
