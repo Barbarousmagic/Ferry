@@ -7,14 +7,14 @@
 #include <fstream>
 #include <iostream>
 
-Ferry::Ferry(int index, double m, Position pos, double sx, double sy, double dt, double drag)
+Ferry::Ferry(int index, double m, Vector2D pos, double sx, double sy, double dt, double drag)
     : Vessel(index, m, pos, sx, sy, dt, drag) {
     nextFerry = nullptr;
     currentThrustX = 0.0;
     currentThrustY = 0.0;
 }
 Ferry* Ferry::getNextFerry() {return nextFerry;}
-Position Ferry::calcDist(double waterX, double waterY) const {
+Vector2D Ferry::calcDist(double waterX, double waterY) const {
     double posX = currentPos.x;
     double posY = currentPos.y;
     double simSpeedX = speedX;
@@ -46,7 +46,7 @@ Position Ferry::calcDist(double waterX, double waterY) const {
 
         simTime += deltaT;
     }
-    Position stopPos;
+    Vector2D stopPos;
     stopPos.x = posX;
     stopPos.y = posY;
     return stopPos;

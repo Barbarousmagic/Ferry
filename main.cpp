@@ -43,9 +43,9 @@ int main() {
     std::cout << "--- IRT Ferry Simulator ---" << std::endl;
     std::vector<std::unique_ptr<Vessel>> fleet;
     std::vector<std::unique_ptr<Controller>> ais;
-    Position port = {1500.0, 5000.0};
+    Vector2D port = {1500.0, 5000.0};
     for (int i = 0; i < shipTypes.size(); i++) {
-        Position start = {500.0 * i, 0};
+        Vector2D start = {500.0 * i, 0};
         if (shipTypes[i] == "Speedboat") {
             fleet.push_back(std::make_unique<Speedboat>(i, speedBoatMass, start, speedX, speedY, dt, 100.0));
         }
@@ -74,11 +74,11 @@ int main() {
             // 2. UPDATE PHYSICS
             fleet[i]->updatePhysics(waterX, waterY);
             // 3. LOG
-            Position pos = fleet[i]->getPos();
+            Vector2D pos = fleet[i]->getPos();
             file << currentTime << "," << fleet[i]->getID() << ","
                  << pos.x << "," << pos.y << ","
                  << fleet[i]->getSpeedX() << "," << fleet[i]->getSpeedY() << std::endl;
-            double distToPort = std::sqrt(std::pow(pos.x - port.x, 2) + std::pow(pos.y - port.y, 2));
+            double distToPort = (pos - port).length();
             if (distToPort > 10.0) allDocked = false;
         }
         for (int i = 0; i < ais.size(); ) {

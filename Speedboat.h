@@ -9,7 +9,7 @@
 
 class Speedboat : public Vessel {
 public:
-    Speedboat(int index, double m, Position pos, double sx, double sy, double dt, double drag);
+    Speedboat(int index, double m, Vector2D pos, double sx, double sy, double dt, double drag);
 
 };
 

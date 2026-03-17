@@ -9,8 +9,8 @@
 class Controller {
 private:
     Vessel& myVessel;
-    Position startPoint;
-    Position target;
+    Vector2D startPoint;
+    Vector2D target;
     double Kp;
     double Ki;
     double Kd;
@@ -19,7 +19,7 @@ private:
     double lastErrorFwd;
     double lastErrorLat;
 public:
-    Controller(Vessel& f, Position start, Position t, double kp_value, double ki_value, double kd_value);
+    Controller(Vessel& f, Vector2D start, Vector2D t, double kp_value, double ki_value, double kd_value);
     void update(double dt, double waterX, double waterY);
     bool isDocked();
 };

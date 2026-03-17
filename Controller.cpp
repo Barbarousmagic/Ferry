@@ -5,28 +5,20 @@
 #include "Controller.h"
 #include <cmath>
 #include <algorithm>
-Controller::Controller(Vessel& f, Position start, Position t, double kp_value, double ki_value, double kd_value)
+Controller::Controller(Vessel& f, Vector2D start, Vector2D t, double kp_value, double ki_value, double kd_value)
     : myVessel(f), startPoint(start), target(t), Kp(kp_value), Ki(ki_value), Kd(kd_value),
         integralFwd(0.0), integralLat(0.0), lastErrorFwd(0.0), lastErrorLat(0.0) {}
 
 void Controller::update(double dt, double waterX, double waterY) {
-    Position currentPos = myVessel.getPos();
+    Vector2D currentPos = myVessel.getPos();
+    Vector2D AB = target - startPoint;
+    Vector2D AP = currentPos - startPoint;
+    double path_length = AB.length();
 
-    double AB_x = target.x - startPoint.x;
-    double AB_y = target.y - startPoint.y;
-
-    double AP_x = currentPos.x - startPoint.x;
-    double AP_y = currentPos.y - startPoint.y;
-
-    double path_length = std::sqrt(AB_x * AB_x + AB_y * AB_y);
-
-    double dirX = AB_x / path_length;
-    double dirY = AB_y / path_length;
-    double perpX = -dirY;
-    double perpY = dirX;
-
-    double errorFwd = (target.x - currentPos.x) * dirX + (target.y - currentPos.y) * dirY;
-    double signedCrossProduct = AB_x * AP_y - AB_y * AP_x;
+    Vector2D unitDirect = AB / path_length;
+    Vector2D unitPerp = {-unitDirect.y, unitDirect.x};
+    double errorFwd = (target - currentPos).dot(unitDirect);
+    double signedCrossProduct = AB.cross(AP);
     double errorLat = signedCrossProduct / path_length; // XTE
 
     integralFwd += errorFwd * dt;
@@ -46,53 +38,36 @@ void Controller::update(double dt, double waterX, double waterY) {
     double derivLat = (errorLat - lastErrorLat) / dt;
     double forwardThrust = Kp * errorFwd + Ki * integralFwd + Kd * derivFwd;
     double lateralThrust = 15 * Kp * (-errorLat) + Ki * (-integralLat) + 15 * Kd * (-derivLat);
-    double thrustX = (forwardThrust * dirX) + (lateralThrust * perpX);
-    double thrustY = (forwardThrust * dirY) + (lateralThrust * perpY);
-
+    Vector2D thrust = unitDirect * forwardThrust + unitPerp * lateralThrust;
     double k = 500.0;
-    double speedX = myVessel.getSpeedX();
-    double speedY = myVessel.getSpeedY();
-    double relX = speedX - waterX;
-    double relY = speedY - waterY;
-    double relMag = std::sqrt(relX * relX + relY * relY);
-    double actualDragX = k * relMag * relX;
-    double actualDragY = k * relMag * relY;
-
-    double idealMag = std::sqrt(speedX * speedX + speedY * speedY);
-    double idealDragX = k * idealMag * speedX;
-    double idealDragY = k * idealMag * speedY;
-
-    double ffThrustX = actualDragX - idealDragX;
-    double ffThrustY = actualDragY - idealDragY;
-    thrustX += ffThrustX;
-    thrustY += ffThrustY;
+    Vector2D speed = {myVessel.getSpeedX(), myVessel.getSpeedY()};
+    Vector2D water = {waterX, waterY};
+    Vector2D relativeSpeed = speed - water;
+    double relMag = relativeSpeed.length();
+    Vector2D actualDragForce = relativeSpeed * k * relMag;
+    double idealMag = speed.length();
+    Vector2D idealDragForce = speed * k * idealMag;
+    thrust = thrust + actualDragForce - idealDragForce;
     Ferry* asFerry = dynamic_cast<Ferry*>(&myVessel);
     if (asFerry != nullptr) {
         Ferry* leader = asFerry->getNextFerry();
         if (leader != nullptr) {
-            Position nextPos = leader->getPos();
-            double distToNext = std::sqrt(pow(currentPos.x - nextPos.x, 2) + pow(currentPos.y - nextPos.y, 2));
+            Vector2D nextPos = leader->getPos();
+            double distToNext = (currentPos - nextPos).length();
             if (distToNext < 150.0) {
-                thrustX = 0.0;
-                thrustY = 0.0;
+                thrust = {0.0, 0.0};
             }
         }
     }
     double maxThrust = 80000.0;
-    thrustX = std::clamp(thrustX, -maxThrust, maxThrust);
-    thrustY = std::clamp(thrustY, -maxThrust, maxThrust);
+    thrust = {std::clamp(thrust.x, -maxThrust, maxThrust), std::clamp(thrust.y, -maxThrust, maxThrust)};
     lastErrorFwd = errorFwd;
     lastErrorLat = errorLat;
-    myVessel.setThrust(thrustX, thrustY);
+    myVessel.setThrust(thrust.x, thrust.y);
 
 
 }
 
 bool Controller::isDocked() {
-    Position currentPos = myVessel.getPos();
-    double errorX = target.x - currentPos.x;
-    double errorY = target.y - currentPos.y;
-    double distance = std::sqrt(errorX * errorX + errorY * errorY);
-
-    return distance < 20.0;
+    return (target - myVessel.getPos()).length() < 20.0;
 }

@@ -11,8 +11,8 @@ private:
     Ferry* nextFerry;
 
 public:
-    Ferry(int index, double m, Position pos, double sx, double sy, double dt, double drag);
-    Position calcDist(double waterX, double waterY) const;
+    Ferry(int index, double m, Vector2D pos, double sx, double sy, double dt, double drag);
+    Vector2D calcDist(double waterX, double waterY) const;
     Ferry* getNextFerry ();
     void setNextFerry(Ferry* next);
 };
