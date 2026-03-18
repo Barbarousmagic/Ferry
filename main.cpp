@@ -4,6 +4,8 @@
 #include <cmath>
 #include <vector>
 #include <memory>
+#include <chrono>
+#include <thread>
 #include "Ferry.h"
 #include "Controller.h"
 #include "Speedboat.h"
@@ -44,29 +46,41 @@ int main() {
     std::vector<std::unique_ptr<Vessel>> fleet;
     std::vector<std::unique_ptr<Controller>> ais;
     Vector2D port = {1500.0, 5000.0};
+    double Kp, Ki, Kd;
+    Ferry* lastSeenFerry = nullptr;
     for (int i = 0; i < shipTypes.size(); i++) {
-        Vector2D start = {500.0 * i, 0};
+        Vector2D start = {1500.0, 0.0 * i};
         if (shipTypes[i] == "Speedboat") {
             fleet.push_back(std::make_unique<Speedboat>(i, speedBoatMass, start, speedX, speedY, dt, 100.0));
+            Kp = 500.0;
+            Ki = 1.0;
+            Kd = 5000.0;
         }
         else if (shipTypes[i] == "Ferry"){
             fleet.push_back(std::make_unique<Ferry>(i, ferryMass, start, speedX, speedY, dt, 500.0));
+            Kp = 8000.0;
+            Ki = 5.0;
+            Kd = 50000.0;
+
         }
-        if (i > 0) {
-            Ferry* currFerry = dynamic_cast<Ferry*>(fleet[i].get());
-            Ferry* prevFerry = dynamic_cast<Ferry*>(fleet[i-1].get());
-            if (currFerry && prevFerry) {
-                currFerry->setNextFerry(prevFerry);
+
+        Ferry* currFerry = dynamic_cast<Ferry*>(fleet[i].get());
+        if (currFerry != nullptr) {
+            if (lastSeenFerry != nullptr) {
+                currFerry->setNextFerry(lastSeenFerry);
             }
+            lastSeenFerry = currFerry;
         }
-        ais.push_back(std::make_unique<Controller>(*fleet[i], start, port, 500.0, 1.0, 5000.0));
+        ais.push_back(std::make_unique<Controller>(*fleet[i], start, port, Kp, Ki, Kd));
     }
     std::ofstream file("telemetry.csv");
     file << "Time,FerryID,PosX,PosY,SpeedX,SpeedY\n";
     double currentTime = 0.0;
     std::cout << "\nStarting simulation..." << std::endl;
     // LOOP
-    while (currentTime < 1000.0) {
+    double timeScale = 100.0;
+    auto lastFrameTime = std::chrono::high_resolution_clock::now();
+    while (currentTime < 2000.0) {
         bool allDocked = true;
         for (int i = 0; i < fleet.size(); i++) {
             // 1. Input / AI CONTROL
@@ -99,6 +113,9 @@ int main() {
             std::cout << "SUCCESS: All ferries docked at port at time " << currentTime << "s!" << std::endl;
             break;
         }
+        auto targetTime = lastFrameTime + std::chrono::duration<double>(dt / timeScale);
+        while (std::chrono::high_resolution_clock::now() < targetTime) {}
+        lastFrameTime = std::chrono::high_resolution_clock::now();
         currentTime += dt;
     }
     if (!fleet.empty()) std::cout << "TIMEOUT: Simulation ended but " << fleet.size() << " vessels are still at sea" << std::endl;
